@@ -71,8 +71,6 @@ app.get("/", (req, res) => {
         `POST ${baseUrl}/api/user/forgotPassword`
       ],
       "🧾 Plans": [
-        `GET ${baseUrl}/api/plan/getallplans`,
-        `GET ${baseUrl}/api/plan/getplan/:id`,
         `POST ${baseUrl}/api/plan/add`,
         `GET ${baseUrl}/api/plan/getAllPlan`,
         `GET ${baseUrl}/api/plan/getById/:id`,
@@ -82,11 +80,9 @@ app.get("/", (req, res) => {
       ],
       "🧪 Tests": [
         `GET ${baseUrl}/api/test/getalltest`,
-        `GET ${baseUrl}/api/test/getById/:id`,
+        `GET ${baseUrl}/api/getTest//:id`,
         `POST ${baseUrl}/api/test/testCreate`,
         `PUT ${baseUrl}/api/test/updateTest/:id`,
-        `GET ${baseUrl}/api/test/getAllTest`,
-        `GET ${baseUrl}/api/test/getTest/:id`,
         `DELETE ${baseUrl}/api/test/deleteTest/:id`
       ],
       "📰 Articles": [
