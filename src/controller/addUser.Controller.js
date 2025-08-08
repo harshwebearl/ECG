@@ -6,6 +6,14 @@ const addMember = async (req, res) => {
   console.log('addMember req.body:', req.body);
   console.log('addMember req.user:', req.user);
 
+  // Allowed enums from schema
+  const allowedRelations = ['Father', 'Mother', 'Brother', 'Sibling', 'Spouse'];
+  const allowedGenders = ['Male', 'Female', 'Other'];
+
+  // Normalize relation and gender
+  const normalizedRelation = relation ? relation.charAt(0).toUpperCase() + relation.slice(1).toLowerCase() : '';
+  const normalizedGender = gender ? gender.charAt(0).toUpperCase() + gender.slice(1).toLowerCase() : '';
+
   // Basic validation
   if (!full_name || !email || !relation || !age || !gender || !weight || !height) {
     return res.status(400).json({ message: "Missing required fields" });
@@ -13,14 +21,20 @@ const addMember = async (req, res) => {
   if (!req.user || !req.user.id) {
     return res.status(401).json({ message: "Unauthorized: user not found in request" });
   }
+  if (!allowedRelations.includes(normalizedRelation)) {
+    return res.status(400).json({ message: `Invalid relation. Allowed values: ${allowedRelations.join(', ')}` });
+  }
+  if (!allowedGenders.includes(normalizedGender)) {
+    return res.status(400).json({ message: `Invalid gender. Allowed values: ${allowedGenders.join(', ')}` });
+  }
 
   try {
     const user = await AddedUser.create({
       full_name,
       email,
-      relation,
+      relation: normalizedRelation,
       age,
-      gender,
+      gender: normalizedGender,
       weight,
       height,
       createdBy: req.user.id,
@@ -163,4 +177,3 @@ export {
   getAllFamilyMembers,
   getFamilyMemberById,
 };
-
