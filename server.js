@@ -89,7 +89,6 @@ app.get("/", (req, res) => {
         `GET ${baseUrl}/api/article/getAll`,
         `GET ${baseUrl}/api/article/getById/:id`,
         `POST ${baseUrl}/api/article/create`,
-        `GET ${baseUrl}/api/article/getall`,
         `PUT ${baseUrl}/api/article/update/:id`,
         `DELETE ${baseUrl}/api/article/delete/:id`
       ],
