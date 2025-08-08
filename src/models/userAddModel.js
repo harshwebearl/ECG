@@ -20,7 +20,7 @@ const userAddSchema = new mongoose.Schema({
     relation: { 
         type: String, 
         required: true, 
-        enum: ['Father', 'Mother', 'Sibling', 'Spouse'] 
+        enum: ['Father', 'Mother','Brother', 'Sibling', 'Spouse'] 
     },
 
     age: { 
