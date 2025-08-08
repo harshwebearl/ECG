@@ -2,6 +2,17 @@ import AddedUser from "../models/userAddModel.js";
 
 const addMember = async (req, res) => {
   const { full_name, email, relation, age, gender, weight, height } = req.body;
+  // Log incoming request data for debugging
+  console.log('addMember req.body:', req.body);
+  console.log('addMember req.user:', req.user);
+
+  // Basic validation
+  if (!full_name || !email || !relation || !age || !gender || !weight || !height) {
+    return res.status(400).json({ message: "Missing required fields" });
+  }
+  if (!req.user || !req.user.id) {
+    return res.status(401).json({ message: "Unauthorized: user not found in request" });
+  }
 
   try {
     const user = await AddedUser.create({
@@ -25,8 +36,8 @@ const addMember = async (req, res) => {
       height: user.height,
     });
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: "Error registering while adding user" });
+    console.error('Error in addMember:', error);
+    res.status(500).json({ message: "Error registering while adding user", error: error.message });
   }
 };
 
