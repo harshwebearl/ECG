@@ -55,14 +55,12 @@ const appAdminSignIn = async (req, res) => {
             return res.status(401).json({ message: 'Invalid email/phone number or password' });
         }
 
-        // const isMatch = await bcrypt.compare(password, user.password);
-        // if (!isMatch) {
-        //     return res.status(401).json({ message: 'Invalid email/phone number or password' });
-        // }
-        if (password !== user.password) {
+        // Use bcrypt to compare passwords
+        const isMatch = await bcrypt.compare(password, user.password);
+        if (!isMatch) {
             return res.status(401).json({ message: 'Invalid email/phone number or password' });
         }
-        
+
         const token = generateToken(user._id);
 
         res.status(200).json({
