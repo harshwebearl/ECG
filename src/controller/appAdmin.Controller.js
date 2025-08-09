@@ -10,59 +10,21 @@ const generateToken = (userId) => {
     });
 };
 
-// const appAdminSignUp = async (req, res) => {
-//     const { email, phoneNumber, password } = req.body;
-
-//     const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}$/;
-
-//     if (!emailRegex.test(email)) {
-//         return res.status(400).json({ message: 'Invalid email format' });
-//     }
-
-//     try {
-//         const adminExists = await AppAdmin.findOne({ $or: [{ email }, { phoneNumber }] });
-
-//         if (adminExists) {
-//             return res.status(400).json({ message: 'AppAdmin already exists with this email/phone number' });
-//         }
-
-//         const hashedPassword = await bcrypt.hash(password, 10);
-
-//         const admin = await AppAdmin.create({
-//             email,
-//             phoneNumber,
-//             password: hashedPassword,
-//         });
-
-//         res.status(201).json({
-//             _id: admin._id,
-//             email: admin.email,
-//             phoneNumber: admin.phoneNumber,
-//         });
-//     } catch (error) {
-//         console.error(error);
-//         res.status(500).json({ message: 'Error registering user' });
-//     }
-// };
-
+// ✅ Sign In (bcrypt)
 const appAdminSignIn = async (req, res) => {
     const { email, phoneNumber, password } = req.body;
 
     try {
         const user = await AppAdmin.findOne({ $or: [{ email }, { phoneNumber }] });
-
         if (!user) {
             return res.status(401).json({ message: 'Invalid email/phone number or password' });
         }
 
-        // const isMatch = await bcrypt.compare(password, user.password);
-        // if (!isMatch) {
-        //     return res.status(401).json({ message: 'Invalid email/phone number or password' });
-        // }
-        if (password !== user.password) {
+        const isMatch = await bcrypt.compare(password, user.password);
+        if (!isMatch) {
             return res.status(401).json({ message: 'Invalid email/phone number or password' });
         }
-        
+
         const token = generateToken(user._id);
 
         res.status(200).json({
@@ -77,51 +39,7 @@ const appAdminSignIn = async (req, res) => {
     }
 };
 
-const getappAdminProfile = async (req, res) => {
-    try {
-        const user = await AppAdmin.findById(req.user._id);
-
-        if (!user) {
-            return res.status(404).json({ message: 'Admin not found' });
-        }
-
-        res.status(200).json({
-            _id: user._id,
-            email: user.email,
-            phoneNumber: user.phoneNumber,
-        });
-    } catch (error) {
-        console.error(error);
-        res.status(500).json({ message: 'Error fetching Admin profile' });
-    }
-};
-
-const updateappAdminProfile = async (req, res) => {
-    const { email, phoneNumber } = req.body;
-
-    try {
-        const user = await AppAdmin.findById(req.user._id);
-
-        if (!user) {
-            return res.status(404).json({ message: 'Admin not found' });
-        }
-
-        user.email = email || user.email;
-        user.phoneNumber = phoneNumber || user.phoneNumber;
-
-        await user.save();
-
-        res.status(200).json({
-            _id: user._id,
-            email: user.email,
-            phoneNumber: user.phoneNumber,
-        });
-    } catch (error) {
-        console.error(error);
-        res.status(500).json({ message: 'Error updating profile' });
-    }
-};
-
+// ✅ Change Password (bcrypt)
 const appAdminchangePassword = async (req, res) => {
     try {
         const { oldPassword, newPassword } = req.body;
@@ -136,27 +54,64 @@ const appAdminchangePassword = async (req, res) => {
         user.password = hashedPassword;
 
         await user.save();
-
         res.status(200).json({ message: "Password changed successfully" });
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
 };
 
+// ✅ Other unchanged functions...
+const getappAdminProfile = async (req, res) => {
+    try {
+        const user = await AppAdmin.findById(req.user._id);
+        if (!user) {
+            return res.status(404).json({ message: 'Admin not found' });
+        }
+        res.status(200).json({
+            _id: user._id,
+            email: user.email,
+            phoneNumber: user.phoneNumber,
+        });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Error fetching Admin profile' });
+    }
+};
+
+const updateappAdminProfile = async (req, res) => {
+    const { email, phoneNumber } = req.body;
+    try {
+        const user = await AppAdmin.findById(req.user._id);
+        if (!user) {
+            return res.status(404).json({ message: 'Admin not found' });
+        }
+        user.email = email || user.email;
+        user.phoneNumber = phoneNumber || user.phoneNumber;
+        await user.save();
+        res.status(200).json({
+            _id: user._id,
+            email: user.email,
+            phoneNumber: user.phoneNumber,
+        });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Error updating profile' });
+    }
+};
+
 const getAllUser = async (req, res) => {
     try {
-        const users = await User.find().sort({ createdAt: -1 }); // Fetch all users sorted by newest first
-
+        const users = await User.find().sort({ createdAt: -1 });
         res.json({
             success: true,
             totalUsers: users.length,
             users
         });
     } catch (error) {
-        res.status(500).json({ 
+        res.status(500).json({
             success: false,
-            message: "Read all failed", 
-            error: error.message 
+            message: "Read all failed",
+            error: error.message
         });
     }
 };
@@ -171,35 +126,31 @@ const getUserById = async (req, res) => {
     } catch (error) {
         res.status(500).json({ message: "Read failed", error: error.message });
     }
-}
+};
 
 const userStatusUpdate = async (req, res) => {
     try {
         const { status } = req.body;
-
         if (!['active', 'blocked'].includes(status)) {
-            return res.status(400).json({ 
-                message: "Invalid status value. Must be either 'active' or 'blocked'" 
+            return res.status(400).json({
+                message: "Invalid status value. Must be either 'active' or 'blocked'"
             });
         }
-
         const user = await User.findByIdAndUpdate(
             req.params.id,
             { status },
             { new: true }
         );
-
         if (!user) {
             return res.status(404).json({ message: "User not found" });
         }
-
         res.status(200).json({
             message: `User ${status === 'blocked' ? 'blocked' : 'activated'} successfully`,
             user
         });
     } catch (error) {
-        res.status(500).json({ 
-            message: "Failed to update user status", 
+        res.status(500).json({
+            message: "Failed to update user status",
             error: error.message
         });
     }
@@ -207,32 +158,26 @@ const userStatusUpdate = async (req, res) => {
 
 const deleteUser = async (req, res) => {
     try {
-      const deleteUser = await User.findByIdAndDelete(req.params.id);
-      if (!deleteUser) 
-          return res.status(404).json({ message: "User not found" });
-      res.json({ message: "User deleted successfully" });
+        const deleteUser = await User.findByIdAndDelete(req.params.id);
+        if (!deleteUser)
+            return res.status(404).json({ message: "User not found" });
+        res.json({ message: "User deleted successfully" });
     } catch (error) {
-      res.status(500).json({ message: "Delete failed", error: error.message });
+        res.status(500).json({ message: "Delete failed", error: error.message });
     }
-}
+};
 
 const getUserWithFamilyById = async (req, res) => {
     try {
-        const { id } = req.params; // Get user id from URL
-
-        // Find the main user
+        const { id } = req.params;
         const user = await User.findById(id);
-
         if (!user) {
             return res.status(404).json({
                 success: false,
                 message: 'Main user not found',
             });
         }
-
-        // Find family members created by this user
         const familyMembers = await AddedUser.find({ createdBy: user._id });
-
         res.status(200).json({
             success: true,
             data: {
@@ -258,7 +203,6 @@ const getUserWithFamilyById = async (req, res) => {
                 }))
             }
         });
-
     } catch (error) {
         console.error(error);
         res.status(500).json({
@@ -268,24 +212,7 @@ const getUserWithFamilyById = async (req, res) => {
     }
 };
 
-
-// const appAdmindeleteUserProfile = async (req, res) => {
-//     try {
-//         const user = await User.findByIdAndDelete(req.user._id);
-
-//         if (!user) {
-//             return res.status(404).json({ message: 'User not found' });
-//         }
-
-//         res.status(200).json({ message: 'User deleted successfully' });
-//     } catch (error) {
-//         console.error(error);
-//         res.status(500).json({ message: 'Error deleting user' });
-//     }
-// };
-
 export {
-    // appAdminSignUp,
     appAdminSignIn,
     getappAdminProfile,
     updateappAdminProfile,
@@ -295,5 +222,4 @@ export {
     userStatusUpdate,
     getUserWithFamilyById,
     deleteUser
-    // appAdmindeleteUserProfile
 };
