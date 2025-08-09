@@ -44,7 +44,7 @@ const appAdminchangePassword = async (req, res) => {
     try {
         const { oldPassword, newPassword } = req.body;
 
-        const user = await AppAdmin.findById(req.user.id);
+        const user = await AppAdmin.findById(req.user._id); // Use _id for consistency
         if (!user) return res.status(404).json({ message: "User not found" });
 
         const isMatch = await bcrypt.compare(oldPassword, user.password);
