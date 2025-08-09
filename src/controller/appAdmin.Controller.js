@@ -3,6 +3,7 @@ import User from '../models/userModel.js';
 import AddedUser from '../models/userAddModel.js';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
+import mongoose from 'mongoose';
 
 const generateToken = (userId) => {
     return jwt.sign({ id: userId }, process.env.JWT_ADMIN_SECRET, {
@@ -286,6 +287,22 @@ const getUserWithFamilyById = async (req, res) => {
 //         res.status(500).json({ message: 'Error deleting user' });
 //     }
 // };
+
+async function updateAdminPassword() {
+  await mongoose.connect('mongodb://localhost:27017/YOUR_DB_NAME'); // Update with your DB connection string
+
+  const admin = await AppAdmin.findOne({ email: 'divy@gmail.com' });
+  if (admin) {
+    admin.password = await bcrypt.hash('321321', 10); // Use the correct password without comma
+    await admin.save();
+    console.log('Password updated and hashed!');
+  } else {
+    console.log('Admin not found!');
+  }
+  mongoose.disconnect();
+}
+
+updateAdminPassword();
 
 export {
     // appAdminSignUp,
