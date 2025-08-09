@@ -60,7 +60,7 @@ app.get("/", (req, res) => {
   res.json({
     message: "Welcome to the API",
     baseUrl: baseUrl + '/api',
-    total: 70,
+    total: 61,
     apis: {
       "👤 User Auth & Profile": [
         `POST ${baseUrl}/api/user/signup`,
