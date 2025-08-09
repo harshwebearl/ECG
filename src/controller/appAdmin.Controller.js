@@ -4,13 +4,14 @@ import AddedUser from '../models/userAddModel.js';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 
+// JWT Token Generator
 const generateToken = (userId) => {
     return jwt.sign({ id: userId }, process.env.JWT_ADMIN_SECRET, {
         expiresIn: '1d',
     });
 };
 
-// ✅ Sign In (bcrypt)
+// ✅ Sign In
 const appAdminSignIn = async (req, res) => {
     const { email, phoneNumber, password } = req.body;
 
@@ -20,13 +21,19 @@ const appAdminSignIn = async (req, res) => {
             return res.status(401).json({ message: 'Invalid email/phone number or password' });
         }
 
-        const isMatch = await bcrypt.compare(password, user.password);
+        // Compare password (handle both hashed & plain text during migration)
+        let isMatch;
+        if (user.password.startsWith('$2b$') || user.password.startsWith('$2a$')) {
+            isMatch = await bcrypt.compare(password, user.password);
+        } else {
+            isMatch = password === user.password;
+        }
+
         if (!isMatch) {
             return res.status(401).json({ message: 'Invalid email/phone number or password' });
         }
 
         const token = generateToken(user._id);
-
         res.status(200).json({
             _id: user._id,
             email: user.email,
@@ -39,17 +46,25 @@ const appAdminSignIn = async (req, res) => {
     }
 };
 
-// ✅ Change Password (bcrypt)
+// ✅ Change Password
 const appAdminchangePassword = async (req, res) => {
     try {
         const { oldPassword, newPassword } = req.body;
 
-        const user = await AppAdmin.findById(req.user._id); // Use _id for consistency
+        const user = await AppAdmin.findById(req.user._id);
         if (!user) return res.status(404).json({ message: "User not found" });
 
-        const isMatch = await bcrypt.compare(oldPassword, user.password);
+        // Compare old password (hashed or plain)
+        let isMatch;
+        if (user.password.startsWith('$2b$') || user.password.startsWith('$2a$')) {
+            isMatch = await bcrypt.compare(oldPassword, user.password);
+        } else {
+            isMatch = oldPassword === user.password;
+        }
+
         if (!isMatch) return res.status(400).json({ message: "Old password is incorrect" });
 
+        // Always store hashed password
         const hashedPassword = await bcrypt.hash(newPassword, 10);
         user.password = hashedPassword;
 
@@ -60,7 +75,7 @@ const appAdminchangePassword = async (req, res) => {
     }
 };
 
-// ✅ Other unchanged functions...
+// ✅ Get Admin Profile
 const getappAdminProfile = async (req, res) => {
     try {
         const user = await AppAdmin.findById(req.user._id);
@@ -78,6 +93,7 @@ const getappAdminProfile = async (req, res) => {
     }
 };
 
+// ✅ Update Admin Profile
 const updateappAdminProfile = async (req, res) => {
     const { email, phoneNumber } = req.body;
     try {
@@ -99,6 +115,7 @@ const updateappAdminProfile = async (req, res) => {
     }
 };
 
+// ✅ Get All Users
 const getAllUser = async (req, res) => {
     try {
         const users = await User.find().sort({ createdAt: -1 });
@@ -116,6 +133,7 @@ const getAllUser = async (req, res) => {
     }
 };
 
+// ✅ Get User by ID
 const getUserById = async (req, res) => {
     try {
         const user = await User.findById(req.params.id);
@@ -128,6 +146,7 @@ const getUserById = async (req, res) => {
     }
 };
 
+// ✅ Update User Status
 const userStatusUpdate = async (req, res) => {
     try {
         const { status } = req.body;
@@ -156,6 +175,7 @@ const userStatusUpdate = async (req, res) => {
     }
 };
 
+// ✅ Delete User
 const deleteUser = async (req, res) => {
     try {
         const deleteUser = await User.findByIdAndDelete(req.params.id);
@@ -167,6 +187,7 @@ const deleteUser = async (req, res) => {
     }
 };
 
+// ✅ Get User with Family by ID
 const getUserWithFamilyById = async (req, res) => {
     try {
         const { id } = req.params;
