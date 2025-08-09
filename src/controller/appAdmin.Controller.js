@@ -3,7 +3,6 @@ import User from '../models/userModel.js';
 import AddedUser from '../models/userAddModel.js';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
-import mongoose from 'mongoose';
 
 const generateToken = (userId) => {
     return jwt.sign({ id: userId }, process.env.JWT_ADMIN_SECRET, {
@@ -56,12 +55,14 @@ const appAdminSignIn = async (req, res) => {
             return res.status(401).json({ message: 'Invalid email/phone number or password' });
         }
 
-        // Use bcrypt to compare passwords
-        const isMatch = await bcrypt.compare(password, user.password);
-        if (!isMatch) {
+        // const isMatch = await bcrypt.compare(password, user.password);
+        // if (!isMatch) {
+        //     return res.status(401).json({ message: 'Invalid email/phone number or password' });
+        // }
+        if (password !== user.password) {
             return res.status(401).json({ message: 'Invalid email/phone number or password' });
         }
-
+        
         const token = generateToken(user._id);
 
         res.status(200).json({
@@ -124,16 +125,12 @@ const updateappAdminProfile = async (req, res) => {
 const appAdminchangePassword = async (req, res) => {
     try {
         const { oldPassword, newPassword } = req.body;
-        console.log('Change password request:', req.body);
-        // Use req.user._id for consistency
-        const user = await AppAdmin.findById(req.user._id);
+
+        const user = await AppAdmin.findById(req.user.id);
         if (!user) return res.status(404).json({ message: "User not found" });
 
         const isMatch = await bcrypt.compare(oldPassword, user.password);
-        if (!isMatch) {
-            console.log('Old password does not match for user:', user.email);
-            return res.status(400).json({ message: "Old password is incorrect" });
-        }
+        if (!isMatch) return res.status(400).json({ message: "Old password is incorrect" });
 
         const hashedPassword = await bcrypt.hash(newPassword, 10);
         user.password = hashedPassword;
@@ -142,7 +139,6 @@ const appAdminchangePassword = async (req, res) => {
 
         res.status(200).json({ message: "Password changed successfully" });
     } catch (error) {
-        console.error('Error changing password:', error);
         res.status(500).json({ message: error.message });
     }
 };
@@ -287,22 +283,6 @@ const getUserWithFamilyById = async (req, res) => {
 //         res.status(500).json({ message: 'Error deleting user' });
 //     }
 // };
-
-async function updateAdminPassword() {
-  await mongoose.connect('mongodb://localhost:27017/YOUR_DB_NAME'); // Update with your DB connection string
-
-  const admin = await AppAdmin.findOne({ email: 'divy@gmail.com' });
-  if (admin) {
-    admin.password = await bcrypt.hash('321321', 10); // Use the correct password without comma
-    await admin.save();
-    console.log('Password updated and hashed!');
-  } else {
-    console.log('Admin not found!');
-  }
-  mongoose.disconnect();
-}
-
-updateAdminPassword();
 
 export {
     // appAdminSignUp,
